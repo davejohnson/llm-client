@@ -1,6 +1,6 @@
 {
   "name": "@bliggy/llm-client",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Provider-neutral AI client for text, chat, tools, and document processing.",
   "main": "index.js",
   "files": [
