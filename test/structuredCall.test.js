@@ -148,6 +148,39 @@ test("structured calls flag provider tool input that violates the original schem
   assert.match(result.toolError.message, /maximum/i);
 });
 
+test("structured schema references do not decode percent-encoded URI schemes", async () => {
+  // RFC 3986 section 3.1 excludes percent-encoding from schemes. The encoded
+  // reference must not resolve to the declared plain HTTP schema resource:
+  // https://github.com/advisories/GHSA-w74x-v6f9-j3xg
+  const schemaId = "http://schemas.example.test/scheme-regression/value";
+  const request = (reference) => ({
+    adapter: { provider: "anthropic", call: async () => ({ output: { value: "valid" } }) },
+    provider: "anthropic",
+    model: "claude-sonnet-5",
+    system: "Extract.",
+    userBlocks: [],
+    tool: {
+      name: "extract",
+      input_schema: {
+        type: "object",
+        definitions: { value: { $id: schemaId, type: "string" } },
+        properties: { value: { $ref: reference } },
+        required: ["value"],
+        additionalProperties: false
+      }
+    }
+  });
+
+  const valid = await callStructured(request(schemaId));
+  assert.equal(valid.toolError, undefined);
+  for (const reference of [
+    "%68ttp://schemas.example.test/scheme-regression/value",
+    "%u0068ttp://schemas.example.test/scheme-regression/value"
+  ]) {
+    await assert.rejects(() => callStructured(request(reference)));
+  }
+});
+
 test("structured calls return normalized request, token, and pricing telemetry", async () => {
   const tokenUsage = {
     inputTokens: 1100000,
