@@ -220,7 +220,7 @@ test("normalization is frozen, idempotent, and excludes prose and unknown fields
 test("normalization accepts only supported providers", () => {
   assert.throws(
     () => normalizeProviderFailure({ provider: "other-provider" }),
-    /provider must be anthropic, meta, openai, or typesafe/
+    /provider must be anthropic, google, meta, openai, or typesafe/
   );
 });
 
