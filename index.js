@@ -13,12 +13,14 @@ const { createMetaAdapter } = require("./lib/metaAdapter");
 const { callChatTurn, callText, normalizeSystem, streamChatTurn } = require("./lib/chatTurn");
 const { callStructured } = require("./lib/structuredCall");
 const { createTypeSafeAdapter } = require("./lib/typesafeAdapter");
+const { createGeminiDecisionAdapter } = require("./lib/geminiDecisionAdapter");
 const { BUILTIN_DECISION_PROFILES, callDecision } = require("./lib/decisionCall");
 
 module.exports = {
   BUILTIN_DECISION_PROFILES,
   callDecision,
   createTypeSafeAdapter,
+  createGeminiDecisionAdapter,
   ...pdf,
   ...profiles,
   ...strictSchema,

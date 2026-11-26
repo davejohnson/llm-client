@@ -115,6 +115,10 @@ inputs.
 
 ## Jev decisions
 
+Decision models answer typed questions with probabilities instead of text.
+Two providers are supported: TypeSafe's Jev, described here, and Google's
+Gemini Decision, described in the next section.
+
 Use `callDecision` with TypeSafe's Jev to classify or score extracted text and
 records. It accepts typed questions and returns their answers, probabilities,
 and confidence values. Applications own the thresholds and actions.
@@ -177,6 +181,48 @@ The required test suite verifies documented wire shapes through a local HTTP
 server and exercises validation, retries, and timeouts. Those checks do not
 establish live service compatibility or decision accuracy. Run the opt-in live
 check with `LIVE_TYPESAFE_DECISION=1 TYPESAFE_API_KEY=... npm run test:live`.
+
+## Gemini decisions
+
+Google's `gemini-decision-1` answers the same question types through the same
+`callDecision` call. Pass its adapter; the provider and default model follow it.
+
+```js
+const { callDecision, createGeminiDecisionAdapter } = require("@bliggy/llm-client");
+
+const result = await callDecision({
+  adapter: createGeminiDecisionAdapter({ apiKey: process.env.GEMINI_API_KEY }),
+  state: "Email from billing@acme.example: invoice 4417 for $212.40 attached.",
+  questions: {
+    isInvoice: {
+      type: "noul",
+      instructions: "Is this a vendor invoice?",
+      criteria: { true: "A bill from a vendor", false: "Anything else" }
+    }
+  }
+});
+
+console.log(result.answers.isInvoice.noul); // 0 to 1
+```
+
+Questions, answers, validation, retries and telemetry are the same as for Jev,
+so an application can switch providers by switching adapters. The differences
+are handled in the adapter:
+
+- Requests go to `POST /v1beta/decisions` with an `x-goog-api-key` header. The
+  key defaults to `GEMINI_API_KEY`.
+- The service takes text. A structured `state`, `instructions` or criterion is
+  sent as its JSON.
+- A Noul's `criteria.true` and `criteria.false` are sent as `true_description`
+  and `false_description`.
+- The response does not name a model, so `result.model` is the one requested.
+- Output tokens are always zero.
+
+Pricing is $0.10 per million input tokens as reported by third parties at the
+model's release; it has not been checked against Google's own price page. The
+wire shapes in the tests come from a live response captured November 25, 2026.
+Run the opt-in live check with
+`LIVE_GEMINI_DECISION=1 GEMINI_API_KEY=... npm run test:live`.
 
 ## Chat and tool turns
 
