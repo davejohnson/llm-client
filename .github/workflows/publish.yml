@@ -5,6 +5,8 @@ on:
 
 permissions:
   contents: read
+  # Lets npm verify this workflow's identity, so publishing needs no stored token.
+  id-token: write
 
 jobs:
   publish:
@@ -19,6 +21,6 @@ jobs:
       - run: npm run test:coverage
       - run: npm audit --omit=dev --registry=https://registry.npmjs.org
       - run: npm pack --dry-run
+      # Trusted publishing needs npm 11.5.1 or newer.
+      - run: npm install -g npm@latest
       - run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
